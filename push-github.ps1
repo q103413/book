@@ -1,5 +1,5 @@
 # ====================================================================
-# VitePress GitHub Source Sync Script (Flat Syntax Version)
+# VitePress GitHub Source Sync Script (Token Preserved Version)
 # ====================================================================
 
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
@@ -22,16 +22,13 @@ if ($CurrentIgnore -notmatch "docs/\.vitepress/dist/") {
     Write-Host "✅ Updated .gitignore to exclude dist directory." -ForegroundColor Green
 }
 
-# 3. 准备 Git 仓库
-Write-Host ">>> Step 2: Preparing Git Repository..." -ForegroundColor Cyan
+# 3. 准备 Git 仓库与暂存
+Write-Host ">>> Step 2: Staging & Committing Source Files..." -ForegroundColor Cyan
 if (-not (Test-Path ".\.git")) {
     git init | Out-Null
-    Write-Host "Initialized empty Git repository." -ForegroundColor Yellow
+    git branch -M main
 }
-git branch -M main
 
-# 4. 暂存与提交
-Write-Host ">>> Step 3: Staging & Committing Source Files..." -ForegroundColor Cyan
 git add .
 
 $TIME_STAMP = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
@@ -41,10 +38,12 @@ $Uncommitted = git status -s
 if ($Uncommitted) {
     git commit -m "$COMMIT_MSG"
     Write-Host "Commit message: $COMMIT_MSG" -ForegroundColor Yellow
+} else {
+    Write-Host "No local changes to commit, pushing to GitHub..." -ForegroundColor Yellow
 }
 
-# 5. 推送到 GitHub
-Write-Host ">>> Step 4: Pushing to GitHub..." -ForegroundColor Cyan
+# 4. 直接推送（使用本地已配置好的远程 URL）
+Write-Host ">>> Step 3: Pushing to GitHub..." -ForegroundColor Cyan
 git push -u origin main
 
 if ($LASTEXITCODE -eq 0) {
