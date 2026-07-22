@@ -1,0 +1,12 @@
+/* docs/.vitepress/theme/custom.css */
+.watermark {
+  position: fixed !important;
+  top: 0 !important;
+  left: 0 !important;
+  width: 100vw !important;
+  height: 100vh !important;
+  z-index: 999999 !important; /* 确保覆盖所有元素 */
+  pointer-events: none !important; /* 允许鼠标点击穿透 */
+  background-image: url('data:image/svg+xml;utf8,<svg xmlns="http://www.w3.org/2000/svg" width="200" height="150"><text x="20" y="80" fill="rgba(150,150,150,0.15)" font-size="20" transform="rotate(-20)">© 张卫老师</text></svg>');
+  background-repeat: repeat;
+}
