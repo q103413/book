@@ -1,5 +1,5 @@
 # ====================================================================
-# VitePress GitHub Source Sync Script (Zero-Variable Path Version)
+# VitePress GitHub Source Sync Script (Stderr-Safe Version)
 # ====================================================================
 
 $ErrorActionPreference = "Stop"
@@ -14,7 +14,7 @@ if (Test-Path ".\.vitepress") {
 $PROJECT_ROOT = (Get-Location).Path
 Write-Host "Project Root: $PROJECT_ROOT" -ForegroundColor Yellow
 
-# 2. 防线检测与设置（硬编码相对路径，杜绝变量为空问题）
+# 2. 防线检测与设置
 if (-not (Test-Path ".\.gitignore")) {
     New-Item -Path ".\.gitignore" -ItemType File -Force | Out-Null
 }
@@ -35,10 +35,16 @@ if (-not (Test-Path ".\.git")) {
 
 git branch -M main
 
-# 4. 远程仓库绑定
+# 4. 远程仓库绑定（临时允许 Continue，避免 Git stderror 误触发终止）
 $TARGET_REMOTE = "https://github.com/q103413/book.git"
-git remote add origin $TARGET_REMOTE 2>$null
-git remote set-url origin $TARGET_REMOTE
+
+$ErrorActionPreference = "Continue"
+git remote set-url origin $TARGET_REMOTE 2>$null
+if ($LASTEXITCODE -ne 0) {
+    git remote add origin $TARGET_REMOTE 2>$null
+}
+$ErrorActionPreference = "Stop"
+
 Write-Host "Remote origin set to: $TARGET_REMOTE" -ForegroundColor Yellow
 
 # 5. 扫描与暂存
