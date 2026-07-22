@@ -1,8 +1,7 @@
 # ====================================================================
-# VitePress GitHub Source Sync Script (Stderr-Safe Version)
+# VitePress GitHub Source Sync Script (Token-Authenticated Version)
 # ====================================================================
 
-$ErrorActionPreference = "Stop"
 [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
 
 Write-Host ">>> Step 1: Locating VitePress Project Root..." -ForegroundColor Cyan
@@ -35,15 +34,16 @@ if (-not (Test-Path ".\.git")) {
 
 git branch -M main
 
-# 4. 远程仓库绑定（临时允许 Continue，避免 Git stderror 误触发终止）
+# 4. 远程仓库重置（彻底杜绝 origin exists 误报与认证失败）
 $TARGET_REMOTE = "https://github.com/q103413/book.git"
 
-$ErrorActionPreference = "Continue"
-git remote set-url origin $TARGET_REMOTE 2>$null
-if ($LASTEXITCODE -ne 0) {
-    git remote add origin $TARGET_REMOTE 2>$null
+# 使用 git remote set-url 结合静默判断
+$remotes = git remote
+if ($remotes -contains "origin") {
+    git remote set-url origin $TARGET_REMOTE
+} else {
+    git remote add origin $TARGET_REMOTE
 }
-$ErrorActionPreference = "Stop"
 
 Write-Host "Remote origin set to: $TARGET_REMOTE" -ForegroundColor Yellow
 
@@ -65,16 +65,16 @@ if ($Uncommitted) {
     Write-Host "Previous commit found, proceeding to push..." -ForegroundColor Yellow
 }
 
-# 7. 推送到 GitHub
+# 7. 执行推送
 git push -u origin main
 
 if ($LASTEXITCODE -eq 0) {
     Write-Host "=============================================" -ForegroundColor Cyan
-    Write-Host "Success: Source code synced to GitHub smoothly!" -ForegroundColor Green
+    Write-Host "🎉 Success: Source code synced to GitHub smoothly!" -ForegroundColor Green
     Write-Host "Repo URL: https://github.com/q103413/book" -ForegroundColor Yellow
     Write-Host "=============================================" -ForegroundColor Cyan
 } else {
     Write-Host "=============================================" -ForegroundColor Red
-    Write-Host "Error: Push failed. Check your network or GitHub permissions." -ForegroundColor Red
+    Write-Host "❌ Error: Push failed. Please verify proxy ports or Personal Access Token." -ForegroundColor Red
     Write-Host "=============================================" -ForegroundColor Red
 }
