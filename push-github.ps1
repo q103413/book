@@ -1,5 +1,5 @@
 # ====================================================================
-# VitePress GitHub Source Sync Script (Perfect Exec Version)
+# VitePress GitHub Source Sync Script (Final Pure Version)
 # ====================================================================
 
 $ErrorActionPreference = "Stop"
@@ -36,10 +36,10 @@ if (-not (Test-Path ".git")) {
 
 git branch -M main
 
-# 4. 安全绑定远程仓库（精准判断是否存在 origin）
+# 4. 原生绑定远程仓库（用 git remote -v 优雅判断，零报错抛出）
 $TARGET_REMOTE = "https://github.com/q103413/book.git"
-$Remotes = git remote
-if ($Remotes -contains "origin") {
+$RemoteCheck = git remote
+if ($RemoteCheck -contains "origin") {
     git remote set-url origin $TARGET_REMOTE
 } else {
     git remote add origin $TARGET_REMOTE
@@ -50,23 +50,30 @@ Write-Host "Remote origin set to: $TARGET_REMOTE" -ForegroundColor Yellow
 Write-Host ">>> Step 3: Scanning and Staging Source Files..." -ForegroundColor Cyan
 git add .
 
-$STATUS = git status --porcelain
-if (-not $STATUS) {
-    Write-Host "Success: No source changes detected. Nothing to push!" -ForegroundColor Green
-    return
-}
-
-# 6. 提交并推送到 GitHub
+# 6. 提交（如果已提交，自动跳过）
 $TIME_STAMP = Get-Date -Format "yyyy-MM-dd HH:mm:ss"
 $COMMIT_MSG = "docs: sync source files ($TIME_STAMP)"
 
 Write-Host ">>> Step 4: Committing & Pushing to GitHub..." -ForegroundColor Cyan
-Write-Host "Commit message: $COMMIT_MSG" -ForegroundColor Yellow
 
-git commit -m "$COMMIT_MSG"
+$Uncommitted = git status -s
+if ($Uncommitted) {
+    git commit -m "$COMMIT_MSG"
+    Write-Host "Commit message: $COMMIT_MSG" -ForegroundColor Yellow
+} else {
+    Write-Host "Previous commit found, proceeding to push..." -ForegroundColor Yellow
+}
+
+# 7. 执行推送
 git push -u origin main
 
-Write-Host "=============================================" -ForegroundColor Cyan
-Write-Host "Success: Source code synced to GitHub smoothly!" -ForegroundColor Green
-Write-Host "Repo URL: https://github.com/q103413/book" -ForegroundColor Yellow
-Write-Host "=============================================" -ForegroundColor Cyan
+if ($LASTEXITCODE -eq 0) {
+    Write-Host "=============================================" -ForegroundColor Cyan
+    Write-Host "🎉 Success: Source code synced to GitHub smoothly!" -ForegroundColor Green
+    Write-Host "Repo URL: https://github.com/q103413/book" -ForegroundColor Yellow
+    Write-Host "=============================================" -ForegroundColor Cyan
+} else {
+    Write-Host "=============================================" -ForegroundColor Red
+    Write-Host "❌ Error: Push failed. Check your network or GitHub permissions." -ForegroundColor Red
+    Write-Host "=============================================" -ForegroundColor Red
+}
